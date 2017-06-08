@@ -2,6 +2,9 @@
 class OrganicInternet_SimpleConfigurableProducts_Checkout_Block_Cart_Item_Renderer
     extends Mage_Checkout_Block_Cart_Item_Renderer
 {
+    protected static $loadedProducts = array();
+    const LOADED_CAPACITY = 24;
+
     protected function getConfigurableProductParentId()
     {
         if ($this->getItem()->getOptionByCode('cpid')) {
@@ -21,16 +24,38 @@ class OrganicInternet_SimpleConfigurableProducts_Checkout_Block_Cart_Item_Render
 
     protected function getConfigurableProductParent()
     {
-        return Mage::getModel('catalog/product')
-            ->setStoreId(Mage::app()->getStore()->getId())
-            ->load($this->getConfigurableProductParentId());
+        $productId = $this->getConfigurableProductParentId();
+        if(isset(self::$loadedProducts[$productId]) == false)
+        {
+            if(sizeof(self::$loadedProducts) > self::LOADED_CAPACITY)
+            {
+                array_shift(self::$loadedProducts);
+            }
+
+            self::$loadedProducts[$productId] =
+                Mage::getModel('catalog/product')
+                    ->setStoreId(Mage::app()->getStore()->getId())
+                    ->load($productId);
+        }
+        return self::$loadedProducts[$productId];
     }
 
     public function getProduct()
     {
-        return Mage::getModel('catalog/product')
-           ->setStoreId(Mage::app()->getStore()->getId())
-                ->load($this->getItem()->getProductId());
+        $productId = $this->getItem()->getProductId();
+        if(isset(self::$loadedProducts[$productId]) == false)
+        {
+            if(sizeof(self::$loadedProducts) > self::LOADED_CAPACITY)
+            {
+                array_shift(self::$loadedProducts);
+            }
+
+            self::$loadedProducts[$productId] =
+                Mage::getModel('catalog/product')
+                    ->setStoreId(Mage::app()->getStore()->getId())
+                    ->load($productId);
+        }
+        return self::$loadedProducts[$productId];
     }
 
     public function getProductName()
